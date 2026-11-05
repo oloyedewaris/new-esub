@@ -1,0 +1,1053 @@
+/*
+ * Montego e-subscription styles.
+ * One mobile column: photo at the top, a white sheet that slides over it,
+ * the four steps, and a sticky action bar.
+ *
+ * --accent and --accent-soft are set on .page from the chosen unit's
+ * colour (see lib/colors.ts).
+ */
+
+/* ── Tokens ─────────────────────────────────────────────────── */
+
+:root {
+  --ink: #111111;
+  --muted: #6b6b6b;
+  --muted-dark: #3f3f4a;
+  --surface: #f3f3f3;
+  --border: #e4e4e4;
+  --green: #1ba672;
+  --red: #e0453a;
+  --font: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --gutter: max(24px, env(safe-area-inset-left, 0px));
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: #e6e6e6;
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* ── Page shell ─────────────────────────────────────────────── */
+
+.page {
+  --accent: #b89b72;
+  --accent-soft: #eee;
+  --accent-strong: #555;
+  max-width: 440px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.page--centered {
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.gutter {
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+.hero {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  height: calc(260px + env(safe-area-inset-top, 0px));
+  background: #ccc 50% 60% / cover no-repeat;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55));
+}
+
+.hero__location {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  bottom: 42px;
+  z-index: 1;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.sheet {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: -28px;
+  background: #fff;
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.step-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Steps without an action bar (unit list, payment confirmed) need room at the bottom. */
+.step-body--padded {
+  padding-bottom: 36px;
+}
+
+/* ── Header and stepper ─────────────────────────────────────── */
+
+.listing-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 0 10px;
+}
+
+.avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  object-fit: cover;
+  background: var(--ink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.listing-header__name {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+
+.listing-header__subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.live-badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.live-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.stepper {
+  list-style: none;
+  margin: 0;
+  padding: 16px 0 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #a3a3a3;
+}
+
+.stepper .is-current {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.stepper .is-done {
+  color: var(--muted);
+}
+
+.stepper-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.stepper-bar i {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+
+.stepper-bar i.is-filled {
+  background: var(--green);
+}
+
+/* ── Shared text ────────────────────────────────────────────── */
+
+h2 {
+  margin: 30px 0 18px;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.heading-tight {
+  margin: 6px 0 18px;
+}
+
+.eyebrow {
+  display: block;
+  margin-top: 34px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+.caption {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--muted-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.error-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red);
+}
+
+.text-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.text-link:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.dashed-divider {
+  display: block;
+  margin: 0 14px;
+  border-top: 2px dashed rgba(20, 20, 26, 0.16);
+}
+
+/* ── Step 1: unit cards ─────────────────────────────────────── */
+
+.unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.unit-card {
+  width: 100%;
+  padding: 0;
+  display: flex;
+  text-align: left;
+  color: inherit;
+  background: var(--card-color, #f3f3f3);
+  border: 2px solid transparent;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.unit-card:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.unit-card:disabled {
+  background: var(--surface);
+  cursor: not-allowed;
+}
+
+.unit-card__info {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 18px;
+  overflow: hidden;
+}
+
+.unit-card .caption {
+  color: var(--muted);
+}
+
+.unit-card__name {
+  display: block;
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.unit-card__price {
+  display: block;
+  margin-top: 8px;
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.unit-card:disabled .unit-card__info {
+  opacity: 0.5;
+}
+
+.unit-card:disabled .unit-card__price {
+  text-decoration: line-through;
+}
+
+.unit-card__stock {
+  width: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-left: 2px dashed #d0d0d0;
+  font-size: 10px;
+}
+
+.units-left__count {
+  font-size: 15px;
+  color: var(--red);
+}
+
+.units-left__text {
+  font-weight: 600;
+  color: var(--red);
+}
+
+.badge-available {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--green);
+}
+
+.stamp-sold-out {
+  padding: 3px 4px;
+  border: 1.5px solid var(--red);
+  border-radius: 4px;
+  transform: rotate(-12deg);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--red);
+}
+
+/* ── Unit ticket (top of steps 2–4) ─────────────────────────── */
+
+.unit-ticket {
+  margin-top: 18px;
+  display: flex;
+  background: var(--accent-soft);
+  border-radius: 18px;
+}
+
+.unit-ticket__info {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.unit-ticket__name {
+  font-size: 17px;
+}
+
+.unit-ticket__link {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.unit-ticket__divider {
+  margin: 12px 0;
+  border-left: 2px dashed rgba(20, 20, 26, 0.18);
+}
+
+.unit-ticket__price {
+  flex: none;
+  width: 104px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+.unit-ticket__price b {
+  font-size: 18px;
+}
+
+/* ── Step 2: plan slider ────────────────────────────────────── */
+
+.plan-hint {
+  margin-top: -8px;
+  font-size: 13px;
+}
+
+.plan-slider {
+  margin-top: 30px;
+}
+
+.plan-slider__input {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  outline: none;
+  background: linear-gradient(90deg, var(--ink) var(--filled, 0%), #e4e4e8 var(--filled, 0%));
+}
+
+.plan-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 4px solid #fff;
+  box-shadow:
+    0 0 0 1.5px rgba(0, 0, 0, 0.12),
+    0 3px 10px rgba(0, 0, 0, 0.22);
+  cursor: grab;
+}
+
+.plan-slider__input::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 4px solid #fff;
+  box-shadow:
+    0 0 0 1.5px rgba(0, 0, 0, 0.12),
+    0 3px 10px rgba(0, 0, 0, 0.22);
+  cursor: grab;
+}
+
+.plan-slider__input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.plan-slider__ticks {
+  position: relative;
+  height: 14px;
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.plan-slider__ticks span {
+  position: absolute;
+  top: 0;
+}
+
+/* ── Step 2: plan summary and chart ─────────────────────────── */
+
+.plan-summary {
+  margin-top: 22px;
+  overflow: hidden;
+  background: var(--accent-soft);
+  border-radius: 22px;
+}
+
+.plan-summary__head {
+  padding: 20px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plan-summary__total {
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-summary__rows {
+  padding: 16px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13.5px;
+}
+
+.plan-summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.plan-summary__row b {
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-summary__row.is-muted span {
+  color: var(--muted-dark);
+}
+
+.plan-chart {
+  padding: 16px 22px 20px;
+}
+
+.plan-chart__bars {
+  height: 84px;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.plan-chart__bars i {
+  flex: 1;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(20, 20, 26, 0.1);
+  transition: height 0.3s;
+}
+
+.plan-chart__bars i.is-deposit {
+  background: var(--accent-strong);
+  box-shadow: none;
+}
+
+.plan-chart__axis {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--muted-dark);
+}
+
+.plan-chart__legend {
+  margin: 8px 0 0;
+  font-size: 11px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ── Step 3: details form ───────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+}
+
+.field input:focus {
+  border-color: var(--ink);
+  outline: none;
+}
+
+.field input[readonly] {
+  background: var(--surface);
+  border-color: transparent;
+}
+
+.email-field {
+  position: relative;
+  display: block;
+}
+
+.email-field input {
+  padding-right: 86px;
+}
+
+.email-field__status {
+  position: absolute;
+  top: 0;
+  right: 14px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.check-dot {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verified-note {
+  margin: -4px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.otp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.otp .text-link {
+  align-self: flex-start;
+}
+
+.otp-boxes {
+  display: flex;
+  gap: 8px;
+}
+
+.otp-boxes input {
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  padding: 0;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+}
+
+.otp-boxes input:focus {
+  border-color: var(--ink);
+  outline: none;
+}
+
+.chip-group {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Step 4: payment ────────────────────────────────────────── */
+
+.amount-due {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  background: var(--accent-soft);
+  border-radius: 20px;
+}
+
+.amount-due .caption {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.amount-due__value {
+  margin: 4px 0 8px;
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bank-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bank-card {
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+}
+
+.bank-card__logo {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bank-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bank-card__info span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.bank-card__number {
+  font-family: var(--mono);
+  font-size: 18px;
+  letter-spacing: 0.03em;
+}
+
+.btn-copy {
+  flex: none;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 19px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.narration {
+  margin: 14px 0;
+}
+
+.narration b {
+  font-family: var(--mono);
+  color: var(--ink);
+}
+
+.status-note {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  background: var(--surface);
+  border-radius: 14px;
+}
+
+.status-note.is-warning {
+  background: #fff6e8;
+}
+
+.confirmed {
+  padding: 30px 0;
+  text-align: center;
+}
+
+.confirmed h2 {
+  margin: 24px 0 10px;
+}
+
+.confirmed__tick {
+  width: 72px;
+  height: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--ink);
+  animation: pop-in 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.balance-card {
+  margin-top: 22px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  background: var(--accent-soft);
+  border-radius: 22px;
+}
+
+.balance-card .caption {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+.balance-card__total {
+  margin-top: 4px;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.balance-card__row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Action bar and buttons ─────────────────────────────────── */
+
+/* Keeps a gap above the bar and pushes it to the bottom on short steps. */
+.action-bar-spacer {
+  flex: 1 0 28px;
+}
+
+.action-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border-top: 1px solid var(--border);
+}
+
+.btn-primary {
+  flex: 1;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 26px;
+  background: var(--green);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary--inline {
+  flex: none;
+  padding: 0 28px;
+}
+
+.btn-primary[aria-busy='true'] {
+  cursor: default;
+}
+
+.btn-secondary {
+  min-height: 52px;
+  padding: 0 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 26px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:is(.unit-card, .btn-primary, .btn-secondary, .btn-copy, .chip, .text-link):focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* ── Spinners and motion ────────────────────────────────────── */
+
+.spinner {
+  display: inline-block;
+  flex: none;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: var(--border);
+  border-top-color: var(--green);
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner--small {
+  width: 20px;
+  height: 20px;
+  border-width: 2.5px;
+}
+
+.spinner--large {
+  width: 44px;
+  height: 44px;
+  border-width: 4px;
+}
+
+.spinner--light {
+  border-color: rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+}
+
+.reveal {
+  animation: reveal 0.45s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.shake {
+  animation: shake 0.35s ease-in-out 2;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
