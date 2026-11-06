@@ -1,14 +1,15 @@
 import type { CSSProperties } from 'react';
-import type { Listing, Unit } from '../api/types';
+// import type { Listing, Unit } from '../api/types';
 
 const DEFAULT_PALETTE = ['#B89B72', '#B5785B', '#8C9466', '#8E8A80', '#A07850', '#7E9480', '#A69A6A'];
 
 /** A unit's own colour, else the listing palette by position, else the default palette. */
-export function unitColor(listing: Listing, unit: Unit): string {
-  if (unit.color) return unit.color;
-  const palette = listing.palette?.length ? listing.palette : DEFAULT_PALETTE;
-  const position = listing.units.findIndex((u) => u.id === unit.id);
-  return palette[Math.max(0, position) % palette.length];
+export function unitColor(): string {
+  // if (unit.color) return unit.color;
+  // const palette = listing.palette?.length ? listing.palette : DEFAULT_PALETTE;
+  // const position = listing.units.findIndex((u) => u.id === unit.id);
+  // return palette[Math.max(0, position) % palette.length];
+  return DEFAULT_PALETTE[Math.floor(Math.random() * DEFAULT_PALETTE.length)];
 }
 
 /**

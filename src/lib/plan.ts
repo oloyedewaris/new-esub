@@ -7,7 +7,7 @@ export interface PlanBreakdown {
   dueToday: number;
   /** Each monthly instalment after the deposit (0 when paying outright). */
   monthly: number;
-  documentationFee: number;
+  fees: any[];
   endDate: Date;
 }
 
@@ -16,22 +16,30 @@ export interface PlanBreakdown {
  * These are a preview: the amounts returned by createSubscription
  * are what the buyer is actually asked to pay.
  */
-export function calculatePlan(unit: Unit, rules: PlanRules, months: number): PlanBreakdown {
-  const isOutright = months === 0;
-  const planCharge = (rules.annualInterestRate * months) / 12;
-  const total = unit.price * (1 + planCharge);
-  const dueToday = isOutright ? total : total * rules.depositRate;
-  const monthly = isOutright ? 0 : (total - dueToday) / months;
+export function calculatePlan(unit: any, selectedPlan: any): any {
+  const isOutright = !selectedPlan;
+  const fees = selectedPlan ? selectedPlan?.bundle?.fees : unit?.fees;
+  const totalFees = fees?.reduce((sum: any, item: any) => sum + Number(item.amount), 0);
+  const total = selectedPlan
+    ? Number(selectedPlan?.purchase_price) + totalFees
+    : Number(unit.price) + totalFees;
+  const dueToday = isOutright ? total : Number(selectedPlan?.initial_deposit_in_value);
+  const periodicPayment = Number(selectedPlan?.periodic_payment);
+  const planType = selectedPlan?.plan_type;
+  const payFreq = selectedPlan?.payment_frequency;
 
   const endDate = new Date();
-  endDate.setMonth(endDate.getMonth() + months);
-
+  if (selectedPlan?.payment_period_in_months) {
+    endDate.setMonth(endDate.getMonth() + Number(selectedPlan?.payment_period_in_months));
+  }
   return {
-    months,
+    isOutright,
+    periodicPayment,
+    planType,
+    payFreq,
     total,
     dueToday,
-    monthly,
-    documentationFee: unit.price * rules.documentationFeeRate,
+    fees,
     endDate,
   };
 }

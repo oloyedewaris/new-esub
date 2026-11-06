@@ -1,4 +1,4 @@
-# Montego e-subscription (React)
+# Montego e-subscription (Next.js)
 
 The buyer flow from the Montego Skyline prototype as a React app driven by your API.
 
@@ -15,14 +15,14 @@ cp .env.example .env
 npm run dev
 ```
 
-Open `http://localhost:5173/?listing=montego-skyline&agent=gbemileke`.
+Open `http://localhost:3000/?listing=montego-skyline&agent=gbemileke`.
 
 In `.env`, either:
 
-- set `VITE_API_BASE_URL` to your API, or
-- set `VITE_USE_MOCK=true` to use sample data (code **123456**; an email containing "new" acts like a first-time buyer).
+- set `NEXT_PUBLIC_API_BASE_URL` to your API, or
+- set `NEXT_PUBLIC_USE_MOCK=true` to use sample data (code **123456**; an email containing "new" acts like a first-time buyer).
 
-`npm run build` writes static files to `dist/`. `npm run format` tidies the code with Prettier.
+`npm run build` creates the production build and `npm start` serves it. `npm run format` tidies the code with Prettier.
 
 ---
 
@@ -36,7 +36,7 @@ Everything lives in `src/api/`. You will usually touch only the first two files.
 | **`mappers.ts`**   | Convert your response into the form's types, if your field names differ.             |
 | `client.ts`        | Auth headers (`extraHeaders`), cookies (`credentials`), how error messages are read. |
 | `types.ts`         | The shapes the form uses. Read this to see what each response needs.                 |
-| `mock.ts`          | Sample data used when `VITE_USE_MOCK=true`.                                          |
+| `mock.ts`          | Sample data used when `NEXT_PUBLIC_USE_MOCK=true`.                                   |
 | `index.ts`         | Wires the above together. No need to edit.                                           |
 
 ### The six calls
@@ -87,6 +87,9 @@ Components never see your raw response, so nothing else changes.
 
 ```
 src/
+  app/
+    layout.tsx          root document, metadata and global styles
+    page.tsx            reads the listing and agent query parameters
   App.tsx                 holds the step state and creates the subscription
   api/                    everything that talks to the backend (see above)
   hooks/
@@ -111,4 +114,4 @@ src/
 public/mock/              sample images used by the mock
 ```
 
-The share link carries `?listing=` (which estate, required) and `?agent=` (who shared it, optional). Both are read at the top of `App.tsx`. A link without `?listing=` shows "This link is incomplete".
+The share link carries `?listing=` (which estate, required) and `?agent=` (who shared it, optional). Both are read by `src/app/page.tsx` and passed to the client app. A link without `?listing=` shows "This link is incomplete".

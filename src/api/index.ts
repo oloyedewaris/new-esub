@@ -1,8 +1,11 @@
+import { BaseURL, LOCAL_ESUB_DOMAIN } from './auth-keys';
 import { request } from './client';
 import { ENDPOINTS, USE_MOCK } from './endpoints';
 import * as map from './mappers';
 import { mockApi } from './mock';
 import type { CreateSubscriptionInput, Listing, PaymentStatus, Subscription, VerifyOtpResult } from './types';
+
+const storeCheckUrl = `${BaseURL}/billing/esub/domain/${encodeURIComponent(LOCAL_ESUB_DOMAIN)}/`;
 
 /**
  * Every call the form makes. Components only ever use `api.*`.
@@ -47,3 +50,12 @@ export const api: EsubApi = USE_MOCK ? mockApi : liveApi;
 
 export * from './types';
 export { ApiError, toMessage } from './client';
+
+export async function getEsubDetails(): Promise<any> {
+  const response = await fetch(storeCheckUrl, { cache: 'no-store' });
+  if (!response.ok)
+    throw new Error(`Could not load apartment allocations (${response.status} ${response.statusText}).`);
+
+  const payload = (await response.json()) as any;
+  return payload;
+}

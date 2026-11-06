@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, type Subscription, type Unit } from './api';
 import { useListing } from './hooks/useListing';
@@ -10,26 +12,32 @@ import { UnitStep } from './steps/UnitStep';
 import { PlanStep } from './steps/PlanStep';
 import { DetailsStep, type BuyerDetails } from './steps/DetailsStep';
 import { PaymentStep } from './steps/PaymentStep';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { fetchProjectBundles, makeEquityPayment } from './apis/investment';
+import { useToast } from '@chakra-ui/react';
+import { business_id, store_name } from './apis/store-name';
 
 /**
  * The share link says which listing to show and which agent shared it:
  *   https://your-domain/?listing=montego-skyline&agent=gbemileke
  */
-const params = new URLSearchParams(window.location.search);
-const LISTING_ID = params.get('listing');
-const AGENT_ID = params.get('agent');
-
 /** Small pause after tapping a unit so the buyer sees it highlight. */
 const PICK_DELAY_MS = 220;
 
 type Step = 1 | 2 | 3 | 4;
 
-export default function App() {
-  const { listing, error, retry } = useListing(LISTING_ID, AGENT_ID);
+type AppProps = { listingId: string | null; agentId: string | null; esubDetails: any };
+
+export default function App({ esubDetails, listingId, agentId }: AppProps) {
+  const toast = useToast();
+  const { listing, error, retry } = useListing(listingId, agentId);
+  const project = esubDetails?.project;
 
   const [step, setStep] = useState<Step>(1);
-  const [unit, setUnit] = useState<Unit | null>(null);
+  const [unit, setUnit] = useState<any | null>(null);
   const [months, setMonths] = useState(0);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+
   const [buyer, setBuyer] = useState<BuyerDetails | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [paid, setPaid] = useState(false);
@@ -47,7 +55,7 @@ export default function App() {
     return (
       <div className="page page--centered">
         <p className="hint">{error}</p>
-        {LISTING_ID && (
+        {listingId && (
           <button type="button" className="btn-primary btn-primary--inline" onClick={retry}>
             Try again
           </button>
@@ -74,19 +82,54 @@ export default function App() {
   };
 
   /** Called by the details step; creates the subscription on the backend. */
+
+  const paymentMutation = useMutation({
+    mutationFn: async (formData: Record<string, unknown>) => {
+      return await makeEquityPayment(formData);
+    },
+    onSuccess: () => {
+      // setSuccess(true);
+    },
+    onError: (err: any) => {
+      toast({
+        status: 'error',
+        description: err?.response?.data?.message ?? err?.message ?? 'Payment request failed.',
+        position: 'top-right',
+      });
+    },
+  });
+
   const createSubscription = async (details: BuyerDetails) => {
-    const created = await api.createSubscription({
-      listingId: listing.id,
-      unitId: unit!.id,
-      planMonths: months,
-      agentId: listing.agent?.id ?? AGENT_ID,
-      email: details.email,
-      verificationToken: details.verificationToken,
-      customer: details.customer,
-      sourceOfFunds: details.sourceOfFunds,
-    });
-    setBuyer(details);
-    setSubscription(created);
+    const storename = store_name();
+    const businessId = business_id();
+    const objToSubmit = {
+      amount_to_pay: selectedPlan?.initial_deposit_in_value
+        ? selectedPlan?.initial_deposit_in_value
+        : selectedPlan?.price,
+      bundle_id: unit.id,
+      business_id: businessId,
+      from_store: true,
+      payment_option: 'virtual_bank',
+      paymentplan_id: selectedPlan?.initial_deposit_in_value ? selectedPlan?.id : undefined,
+      redirect_url: `https://${storename}.6787878.com`,
+      store_name: storename,
+      type: 'WHOLE',
+    };
+
+    await paymentMutation.mutateAsync(objToSubmit);
+
+    // const created = await api.createSubscription({
+    //   listingId: listing.id,
+    //   unitId: unit!.id,
+    //   planMonths: months,
+    //   agentId: listing.agent?.id ?? agentId,
+    //   email: details.email,
+    //   verificationToken: details.verificationToken,
+    //   customer: details.customer,
+    //   sourceOfFunds: details.sourceOfFunds,
+    // });
+    // setBuyer(details);
+    // setSubscription(created);
     setStep(4);
   };
 
@@ -94,15 +137,11 @@ export default function App() {
 
   const hasActionBar = step > 1 && !paid;
   const firstUnit = unit ?? listing.units[0];
-  const pageStyle = firstUnit ? accentVars(unitColor(listing, firstUnit)) : undefined;
+  const pageStyle = firstUnit ? accentVars(unitColor()) : undefined;
 
   return (
     <div className="page" style={pageStyle}>
-      <Hero
-        imageUrl={listing.heroImageUrl}
-        location={listing.location}
-        alt={`${listing.name} by ${listing.developer}`}
-      />
+      <Hero imageUrl={project?.photo_urls?.[0]} location={project?.landmark} alt={`${project?.name}`} />
 
       <div className="sheet">
         <div className="gutter">
@@ -111,15 +150,19 @@ export default function App() {
         </div>
 
         <main className={'gutter step-body' + (hasActionBar ? '' : ' step-body--padded')}>
-          {step === 1 && <UnitStep listing={listing} selectedUnit={unit} onSelect={selectUnit} />}
+          {step === 1 && <UnitStep project={project} selectedUnit={unit} onSelect={selectUnit} />}
 
           {step === 2 && unit && (
             <PlanStep
               unit={unit}
               rules={listing.plan}
               months={months}
-              onChangeMonths={setMonths}
-              onBack={() => setStep(1)}
+              selectedPlan={selectedPlan}
+              setSelectedPlan={setSelectedPlan}
+              onBack={() => {
+                setSelectedPlan(null);
+                setStep(1);
+              }}
               onNext={() => setStep(3)}
             />
           )}

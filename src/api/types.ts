@@ -44,12 +44,11 @@ export interface Unit {
 export interface PlanRules {
   monthOptions: number[]; //      slider stops in months, 0 = pay outright
   depositRate: number; //         0.1 = 10% deposit on instalment plans
-  annualInterestRate: number; //  0 = no plan charge
-  documentationFeeRate: number; // 0.05 = 5% of the price
 }
 
 export interface Customer {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   address: string;
   occupation: string;
@@ -100,5 +99,4 @@ export interface BankAccount {
 }
 
 export type PaymentStatus =
-  | { status: 'pending' }
-  | { status: 'confirmed'; amountPaid: number; totalAmount: number; paidAt?: string };
+  { status: 'pending' } | { status: 'confirmed'; amountPaid: number; totalAmount: number; paidAt?: string };

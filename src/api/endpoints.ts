@@ -3,7 +3,7 @@
  *  ENDPOINTS: the one file to edit when plugging in the backend.
  * ─────────────────────────────────────────────────────────────
  *
- * The base URL comes from VITE_API_BASE_URL in your .env file.
+ * The base URL comes from NEXT_PUBLIC_API_BASE_URL in your .env file.
  * Each entry is one call the form makes. Change the method or
  * path to match your backend; nothing else needs to change.
  *
@@ -11,10 +11,10 @@
  * in ./mappers.ts.
  */
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
 
-/** Set VITE_USE_MOCK=true to run on the sample data in ./mock.ts. */
-export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+/** Set NEXT_PUBLIC_USE_MOCK=true to run on the sample data in ./mock.ts. */
+export const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
 
 export interface Endpoint {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH';

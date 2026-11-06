@@ -1,10 +1,10 @@
 import type { CSSProperties } from 'react';
-import type { Unit } from '../api';
+// import type { Unit } from '../api';
 import { softTint } from '../lib/colors';
 import { formatNaira } from '../lib/format';
 
 interface UnitCardProps {
-  unit: Unit;
+  unit: any;
   color: string;
   selected: boolean;
   onSelect: () => void;
@@ -12,7 +12,7 @@ interface UnitCardProps {
 
 /** A tappable unit on step 1. Sold-out units are greyed out and can't be tapped. */
 export function UnitCard({ unit, color, selected, onSelect }: UnitCardProps) {
-  const soldOut = unit.unitsLeft === 0;
+  const soldOut = unit?.quantity === 0;
 
   return (
     <button
@@ -21,16 +21,16 @@ export function UnitCard({ unit, color, selected, onSelect }: UnitCardProps) {
       style={{ '--card-color': softTint(color) } as CSSProperties}
       aria-pressed={selected}
       disabled={soldOut}
-      aria-label={soldOut ? `${unit.name}, sold out` : undefined}
+      aria-label={soldOut ? `${unit?.unit_title}, sold out` : undefined}
       onClick={onSelect}
     >
       <span className="unit-card__info">
-        <span className="caption">{unit.label}</span>
-        <span className="unit-card__name">{unit.name}</span>
-        <span className="unit-card__price">{formatNaira(unit.price)}</span>
+        <span className="caption">{unit?.project?.building_type}</span>
+        <span className="unit-card__name">{unit?.unit_title}</span>
+        <span className="unit-card__price">{formatNaira(unit?.price)}</span>
       </span>
       <span className="unit-card__stock">
-        <StockBadge unitsLeft={unit.unitsLeft} />
+        <StockBadge unitsLeft={unit?.quantity} />
       </span>
     </button>
   );

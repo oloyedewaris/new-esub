@@ -4,7 +4,7 @@ import type { Listing } from './types';
 
 /**
  * Sample data so the form runs before the backend is ready.
- * Turn on with VITE_USE_MOCK=true.
+ * Turn on with NEXT_PUBLIC_USE_MOCK=true.
  *
  *   • The one-time code is 123456.
  *   • An email containing "new" acts like a first-time buyer.
@@ -24,8 +24,6 @@ const LISTING: Listing = {
   plan: {
     monthOptions: [0, 12, 24, 36, 48, 60, 72, 84, 96],
     depositRate: 0.1,
-    annualInterestRate: 0,
-    documentationFeeRate: 0.05,
   },
   units: [
     {
@@ -96,9 +94,9 @@ export const mockApi: EsubApi = {
   async createSubscription(input) {
     await delay(900);
     const unit = LISTING.units.find((u) => u.id === input.unitId)!;
-    const { depositRate, annualInterestRate } = LISTING.plan;
+    const { depositRate } = LISTING.plan;
 
-    const total = unit.price * (1 + (annualInterestRate * input.planMonths) / 12);
+    const total = unit.price * (1 + (0.1 * input.planMonths) / 12);
     const amountDue = input.planMonths ? total * depositRate : total;
     const id = `sub_${Date.now()}`;
 

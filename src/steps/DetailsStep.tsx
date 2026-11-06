@@ -6,6 +6,11 @@ import { UnitTicket } from '../components/UnitTicket';
 import { ActionBar } from '../components/ActionBar';
 import { OtpInput, OTP_LENGTH } from '../components/OtpInput';
 import { Spinner } from '../components/Spinner';
+import { useMutation } from '@tanstack/react-query';
+import { loginWithOTP, registerUser, requestOTPForEmailVerification } from '../apis/auth';
+import { useToast } from '@chakra-ui/react';
+import { getProfileData, updateProfile } from '../apis/profile';
+import { store_name } from '../apis/store-name';
 
 /** What this step hands back to App once the buyer is done. */
 export interface BuyerDetails {
@@ -34,13 +39,14 @@ interface DetailsStepProps {
  */
 type Phase = 'email' | 'sending' | 'code' | 'verifying' | 'details';
 
-const EMPTY_CUSTOMER: Customer = { fullName: '', phone: '', address: '', occupation: '' };
+const EMPTY_CUSTOMER: Customer = { firstName: '', lastName: '', phone: '', address: '', occupation: '' };
 const RESEND_WAIT_SECONDS = 30;
 const INCOMPLETE_MESSAGE = 'Please fill in every field and choose your source of funds.';
 
 /** Turns missing or null fields from the backend into empty strings. */
 const withBlanks = (c: Partial<Record<keyof Customer, string | null>>): Customer => ({
-  fullName: c.fullName ?? '',
+  firstName: c.firstName ?? '',
+  lastName: c.lastName ?? '',
   phone: c.phone ?? '',
   address: c.address ?? '',
   occupation: c.occupation ?? '',
@@ -52,7 +58,8 @@ const filledFields = (c: Customer) =>
 
 /** Removes stray spaces before the details are sent. */
 const trimAll = (c: Customer): Customer => ({
-  fullName: c.fullName.trim(),
+  firstName: c.firstName.trim(),
+  lastName: c.lastName.trim(),
   phone: c.phone.trim(),
   address: c.address.trim(),
   occupation: c.occupation.trim(),
@@ -61,7 +68,8 @@ const trimAll = (c: Customer): Customer => ({
 const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email.trim());
 
 const isComplete = (c: Customer, sourceOfFunds: SourceOfFunds | null) =>
-  c.fullName.trim().length > 1 &&
+  c.firstName.trim().length > 1 &&
+  c.lastName.trim().length > 1 &&
   c.phone.replace(/\D/g, '').length >= 7 &&
   c.address.trim().length > 3 &&
   c.occupation.trim().length > 1 &&
@@ -69,17 +77,19 @@ const isComplete = (c: Customer, sourceOfFunds: SourceOfFunds | null) =>
 
 /** Step 3. Verify the buyer's email, then collect (or confirm) their details. */
 export function DetailsStep({ unit, saved, onBack, onSubmit }: DetailsStepProps) {
-  const [phase, setPhase] = useState<Phase>(saved ? 'details' : 'email');
+  const toast = useToast();
+  const [phase, setPhase] = useState<Phase>('email');
   const [email, setEmail] = useState(saved?.email ?? '');
   const [code, setCode] = useState('');
-  const [token, setToken] = useState(saved?.verificationToken ?? '');
-  const [isReturning, setIsReturning] = useState(saved?.isReturning ?? false);
-  const [customer, setCustomer] = useState<Customer>(saved?.customer ?? EMPTY_CUSTOMER);
-  const [lockedFields, setLockedFields] = useState<(keyof Customer)[]>(saved?.lockedFields ?? []);
-  const [sourceOfFunds, setSourceOfFunds] = useState<SourceOfFunds | null>(saved?.sourceOfFunds ?? null);
+  const [token, setToken] = useState('');
+  const [isReturning, setIsReturning] = useState(false);
+  const [customer, setCustomer] = useState<Customer>(EMPTY_CUSTOMER);
+  const [lockedFields, setLockedFields] = useState<(keyof Customer)[]>([]);
+  const [sourceOfFunds, setSourceOfFunds] = useState<SourceOfFunds | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
+  const [newUser, setNewUser] = useState(false);
 
   const formComplete = isComplete(customer, sourceOfFunds);
   // The "fill in every field" message disappears as soon as the form is complete.
@@ -94,7 +104,8 @@ export function DetailsStep({ unit, saved, onBack, onSubmit }: DetailsStepProps)
     setError(null);
     setPhase('sending');
     try {
-      await api.sendOtp(email.trim());
+      await sendCodeMutation.mutateAsync();
+      // await api.sendOtp(email.trim());
       setCode('');
       setPhase('code');
       resend.start(RESEND_WAIT_SECONDS);
@@ -119,21 +130,74 @@ export function DetailsStep({ unit, saved, onBack, onSubmit }: DetailsStepProps)
     }
   };
 
+  const settingsMutation = useMutation({
+    mutationFn: () => getProfileData({ profile: true }),
+  });
+  const nokSettingsMutation = useMutation({
+    mutationFn: () => getProfileData({ next_of_kin: true }),
+  });
+
   const verifyCode = async (fullCode: string) => {
     setError(null);
     setPhase('verifying');
     try {
-      const result = await api.verifyOtp(email.trim(), fullCode);
-      setToken(result.verificationToken);
-      const onFile = result.customer ? withBlanks(result.customer) : null;
-      setIsReturning(onFile !== null);
-      setCustomer(onFile ?? EMPTY_CUSTOMER);
-      setLockedFields(onFile ? filledFields(onFile) : []);
+      const result = await verifyCodeMutation.mutateAsync(fullCode);
+      console.log('result', result);
+      // const result = await api.verifyOtp(email.trim(), fullCode);
+      if (result?.data?.token) sessionStorage.setItem('token', result?.data?.token);
+
+      const settings = await settingsMutation.mutateAsync();
+      console.log('settings', settings);
+      const {
+        first_name,
+        last_name,
+        date_of_birth,
+        highest_education,
+        marital_status,
+        gender,
+        address,
+        phone,
+        occupation,
+        source_of_funds,
+      } = settings?.data?.data;
+      setCustomer({
+        firstName: first_name,
+        lastName: last_name,
+        address,
+        occupation,
+        phone,
+      });
+      setSourceOfFunds(source_of_funds);
+      const nokSettings = await nokSettingsMutation.mutateAsync();
+      console.log('nokSettings', nokSettings);
+      // const {
+      //   first_name: nokFirstName,
+      //   last_name: nokLtName,
+      //   phone,
+      //   relationship,
+      //   residential_address,
+      // } = nokSettings?.data?.data;
+
+      // const onFile = result.customer ? withBlanks(result.customer) : null;
+      // setIsReturning(onFile !== null);
+      // setCustomer(onFile ?? EMPTY_CUSTOMER);
+      // setLockedFields(onFile ? filledFields(onFile) : []);
       setPhase('details');
-    } catch (e) {
-      setError(toMessage(e));
-      setCode('');
-      setPhase('code');
+    } catch (err: any) {
+      console.log('err', err?.response?.status);
+      if (err?.response?.status === 404) {
+        setNewUser(true);
+        setPhase('details');
+      } else {
+        toast({
+          description: `${err?.response?.data?.message || 'There was an error authenticating this account. Please try again'}`,
+          status: 'error',
+          duration: 5000,
+        });
+        setError(toMessage(err));
+        setCode('');
+        setPhase('code');
+      }
     }
   };
 
@@ -151,6 +215,8 @@ export function DetailsStep({ unit, saved, onBack, onSubmit }: DetailsStepProps)
     setError(null);
     setSubmitting(true);
     try {
+      await updateProfileMutation.mutateAsync('profile');
+      setNewUser(false);
       await onSubmit({
         email: email.trim(),
         verificationToken: token,
@@ -177,6 +243,115 @@ export function DetailsStep({ unit, saved, onBack, onSubmit }: DetailsStepProps)
   };
 
   // ── What the action bar does in each phase ─────────────────
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (field: 'profile' | 'nok') => {
+      if (field === 'profile') {
+        if (newUser) {
+          const storeName = store_name();
+          const res = await registerUser({
+            store_name: storeName,
+            email: email,
+            first_name: customer.firstName,
+            last_name: customer.lastName,
+            address: customer.address,
+            phone: customer.phone,
+            occupation: customer.occupation,
+            source_of_funds: sourceOfFunds,
+            // date_of_birth: aboutYou.dateOfBirth,
+            // marital_status: aboutYou.maritalStatus,
+            // gender: aboutYou.gender,
+            // highest_education: aboutYou.education,
+          });
+          if (res?.data?.token) sessionStorage.setItem('token', res?.data?.token);
+        } else {
+          await updateProfile({
+            first_name: customer.firstName,
+            last_name: customer.lastName,
+            address: customer.address,
+            phone: customer.phone,
+            occupation: customer.occupation,
+            source_of_funds: sourceOfFunds,
+            // date_of_birth: aboutYou.dateOfBirth?.split('/')?.reverse()?.join('-'),
+            // marital_status: aboutYou.maritalStatus,
+            // gender: aboutYou.gender,
+            // highest_education: aboutYou.education,
+            profile_details: true,
+          });
+        }
+
+        // const strip = stripDataUrlBase64Prefix;
+        // if (documents.governmentId instanceof File)
+        //   await updateProfile({
+        //     document: [
+        //       {
+        //         document_type: "id_document",
+        //         document_name: (documents.governmentId)?.name,
+        //         id_number: null,
+        //         image: await encodeFileToBase64(documents.governmentId).then(strip),
+        //       },
+        //     ],
+        //     // utility_bill: [
+        //     //   {
+        //     //     utility_bill_type: null,
+        //     //     document_name: documents?.utilityBill?.name,
+        //     //     utility_bill: await encodeFileToBase64(documents.utilityBill as File).then(strip),
+        //     //   },
+        //     // ],
+        //     documents: true,
+        //   });
+      }
+
+      // if (field === "nok")
+      //   await updateProfile({
+      //     first_name: nextOfKin?.firstName,
+      //     last_name: nextOfKin?.lastName,
+      //     email: nextOfKin?.email,
+      //     phone: nextOfKin?.phoneNumber,
+      //     relationship: nextOfKin?.relationship,
+      //     residential_address: nextOfKin?.residentialAddress,
+      //     next_of_kin: true,
+      //   });
+
+      return field;
+    },
+    onSuccess: () => {
+      // setStep(field);
+      // setNewUser(false);
+      // if (field === "success") {
+      //   const storename = store_name();
+      //   const businessId = business_id();
+      //   const objToSubmit = {
+      //     amount_to_pay: selectedPlan?.initial_deposit_in_value ? selectedPlan?.initial_deposit_in_value : selectedPlan?.price,
+      //     bundle_id: fetchedUnit.id,
+      //     business_id: businessId,
+      //     from_store: true,
+      //     payment_option: "virtual_bank",
+      //     paymentplan_id: selectedPlan?.initial_deposit_in_value ? selectedPlan?.id : undefined,
+      //     redirect_url: `https://${storename}.6787878.com`,
+      //     store_name: storename,
+      //     type: "WHOLE",
+      //     allocation_id: allocationId,
+      //   };
+      //   paymentMutation.mutate(objToSubmit);
+      // }
+    },
+    onError: (err: any) => {
+      toast({
+        title: `${err?.response?.data?.message || 'There was an error updating data'}`,
+        description: '',
+        status: 'error',
+      });
+    },
+  });
+
+  const sendCodeMutation = useMutation({
+    mutationFn: () => requestOTPForEmailVerification({ email: email?.trim(), verify: true }),
+  });
+
+  const verifyCodeMutation = useMutation({
+    mutationFn: (fullCode: string) => loginWithOTP({ email, code: fullCode }),
+  });
 
   const action = {
     email: { label: 'Send code', onNext: sendCode, blocked: !isValidEmail(email), busy: false },
@@ -341,7 +516,8 @@ function CustomerFields({ customer, lockedFields, onChange }: CustomerFieldsProp
 
   return (
     <>
-      {field('fullName', 'Full name', { autoComplete: 'name' })}
+      {field('firstName', 'First name', { autoComplete: 'name' })}
+      {field('lastName', 'Last name', { autoComplete: 'name' })}
       {field('phone', 'Phone number', { type: 'tel', inputMode: 'tel', autoComplete: 'tel' })}
       {field('address', 'Home address', { autoComplete: 'street-address' })}
       {field('occupation', 'Occupation', { autoComplete: 'organization-title' })}
